@@ -10,6 +10,10 @@ output:
 ```{r load}
 if (!file.exists("activity.csv")) { unzip("repdata_data_activity.zip") }
 data <- read.csv("activity.csv")
+data$date <- as.Date(data$date)
+data$day <- as.character(weekdays(data$date)) %in% c("dimanche","samedi")
+data$day <- as.factor(data$day)
+levels(data$day)<-c("weekday","weekend")
 ```
 
 
@@ -19,7 +23,7 @@ data <- read.csv("activity.csv")
 # Load Dplyr library without Welcome message
 suppressMessages(library(dplyr))
 # We calculate the total, mean and media, number of steps taken per day
-dataDay  <- filter(data, !is.na(steps)) %>% group_by(date) %>% summarize(sum=sum(steps), mean=mean(steps), median=median(steps))
+dataDay  <- data %>% group_by(date) %>% summarize(sum = sum(steps),mean=mean(steps),median=steps[144]) 
 barplot(dataDay$sum,col="blue",main="Histogram of total number of steps per day",ylab="Number of steps", xlab="Period : October - November, 2012")
 #Here we calculate mean and median of the total number of steps taken per day
 dataDay
@@ -29,19 +33,43 @@ dataDay
 ## What is the average daily activity pattern?
 
 ```{r plot daily activity}
-dataInterval  <- filter(data, !is.na(steps)) %>% group_by(interval) %>% summarize(mean=mean(steps))
+dataInterval  <- data %>% group_by(interval) %>% summarize(mean=mean(steps,na.rm=TRUE))
 with(dataInterval, plot(interval, mean, main = "Steps in each 5 min interval", type = "l", col="red")) 
-filter(dataInterval, mean==max(mean))
+dataInterval[dataInterval$mean==max(dataInterval$mean), ]
 ```
 
 ## Imputing missing values
-```{r mean}
-dataFill  <- filter(data, is.na(steps)) %>% mutate(steps=mean(steps))
+```{r NA}
+# Number of NA values
+count(data[is.na(data$steps)==TRUE,])
+intervals <- unique(data$interval)
+dataFill <- data.frame(steps=integer(),
+                       date=factor(),
+                       interval=integer())
+for (i in intervals) {
+  dataFill <- rbind(dataFill, filter (data,interval==i) %>%
+            mutate(mean=mean(steps,na.rm=TRUE)))
+}
+dataNA <- filter(dataFill, is.na(steps)) %>% mutate(steps=mean)
+dataNew <- rbind(filter(dataFill, !is.na(steps)), dataNA)
+dataDay  <- dataNew %>% group_by(date) %>% 
+  summarize(sum = sum(steps),mean=mean(steps),median=round(steps[144])) 
+barplot(dataDay$sum,col="blue",main="Histogram of total number of steps per  day without NA values",ylab="Number of steps", xlab="Period : October - November, 2012")
+#Here we calculate mean and median of the total number of steps taken per day
+dataDay
 ```
 
-
+Now we don't have day with NA value for mean or median. We supress some gap in the histogram
 
 ## Are there differences in activity patterns between weekdays and weekends?
-```{r}
+```{r weekdays and weekend}
+
+
+dataWeekend  <- data %>% filter(day=="weekend") %>% group_by(interval) %>% summarize(mean=mean(steps,na.rm=TRUE))
+dataWeeday  <- data %>% filter(day!="weekend") %>% group_by(interval) %>% summarize(mean=mean(steps,na.rm=TRUE))
+with(dataWeekend, plot(interval, mean, main = "Steps in each 5 min interval", type = "l"), col="blue") 
+with(dataWeeday, plot(interval, type = "l"), col="red") 
+legend("topright", pch = 1, col = c("blue", "red"), legend = c("Weekend", "Weekday"))
+
 
 ```

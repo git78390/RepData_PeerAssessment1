@@ -7,11 +7,21 @@ output:
 
 
 ## Loading and preprocessing the data
+```{r load}
+data <- read.csv("activity.csv")
+```
 
 
 
 ## What is mean total number of steps taken per day?
+```{r dplyr, output=FALSE}
+library(dplyr)
+```
 
+```{r mean}
+dataMean  <- filter(data, !is.na(steps)) %>% group_by(date) %>% summarize(mean=mean(steps))
+hist(dataMean$mean,col="blue",breaks=100,main="Histrogram of mean steps",xlab="Means steps by day")
+```
 
 
 ## What is the average daily activity pattern?
@@ -23,3 +33,17 @@ output:
 
 
 ## Are there differences in activity patterns between weekdays and weekends?
+
+
+
+```{r}
+
+```
+
+You can also embed plots, for example:
+
+```{r, echo=FALSE}
+plot(cars)
+```
+
+

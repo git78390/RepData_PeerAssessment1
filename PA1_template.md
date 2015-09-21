@@ -129,36 +129,8 @@ Now we don't have day with NA value for mean or median. We supress some gap in t
 ## Are there differences in activity patterns between weekdays and weekends?
 
 ```r
-dataWeekend  <- data %>% filter(day=="weekend") %>% group_by(interval) %>% summarize(mean=mean(steps,na.rm=TRUE))
-dataWeeday  <- data %>% filter(day!="weekend") %>% group_by(interval) %>% summarize(mean=mean(steps,na.rm=TRUE))
-with(dataWeekend, plot(interval, mean, main = "Steps in each 5 min interval", type = "n")) 
-with(dataWeekend, line(interval, mean), col="blue") 
-```
-
-```
-## 
-## Call:
-## line(interval, mean)
-## 
-## Coefficients:
-## [1]  -1.05368   0.02833
-```
-
-```r
-with(dataWeeday, line(interval, mean), col="red") 
-```
-
-```
-## 
-## Call:
-## line(interval, mean)
-## 
-## Coefficients:
-## [1]  8.52875  0.01126
-```
-
-```r
-legend("topright", pch = 1, col = c("blue", "red"), legend = c("Weekend", "Weekday"))
+library(lattice)
+xyplot(steps ~ interval | day, data = data, type="l", layout = c(1, 2))
 ```
 
 ![](PA1_template_files/figure-html/weekdays and weekend-1.png) 
